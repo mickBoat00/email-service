@@ -9,11 +9,6 @@ module "image_processor_lambda" {
   policy_statements = [
     {
       Effect = "Allow"
-      Action = ["s3:GetObject"]
-      Resource = "*"
-    },
-    {
-      Effect = "Allow"
       Action = [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
@@ -22,4 +17,15 @@ module "image_processor_lambda" {
       Resource = "*"
     }
   ]
+}
+
+
+module "api_gateway" {
+  source = "./modules/apigateway"
+
+  api_name     = "email-service-api"
+  lambda_arn   = module.image_processor_lambda.lambda_arn
+  lambda_name  = module.image_processor_lambda.lambda_name
+  region       = var.region
+  stage_name   = "dev"
 }
