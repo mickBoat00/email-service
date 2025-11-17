@@ -4,7 +4,11 @@ module "image_processor_lambda" {
   lambda_name          = "test-func"
   region               = var.region
   ecr_repository_name  = var.ecr_repository_name
-  image_tag            = var.image_tag
+  image_uri   = "${var.ecr_repository_uri}:${var.identity_image_tag}"
+
+  environment_variables = {
+    MONGODB_URI = var.mongodb_uri
+  }
 
   policy_statements = [
     {
@@ -18,7 +22,6 @@ module "image_processor_lambda" {
     }
   ]
 }
-
 
 module "api_gateway" {
   source = "./modules/apigateway"

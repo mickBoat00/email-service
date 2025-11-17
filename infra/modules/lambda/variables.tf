@@ -29,3 +29,12 @@ variable "policy_statements" {
   type = list(any)
   description = "List of IAM policy statements to attach to the Lambda role"
 }
+
+variable "environment_variables" {
+  type    = map(string)
+  default = {}
+}
+
+variable "image_uri" {
+  type = string
+}

@@ -32,8 +32,12 @@ resource "aws_lambda_function" "lambda_function" {
 
   package_type = "Image"
 
-  image_uri = "${data.aws_ecr_image.lambda_image.registry_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository_name}@${data.aws_ecr_image.lambda_image.image_digest}"
-
+  image_uri = var.image_uri
+  
   memory_size = var.memory_size
   timeout     = var.timeout
+
+  environment {
+    variables = var.environment_variables
+  }
 }

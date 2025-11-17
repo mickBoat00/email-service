@@ -22,6 +22,36 @@ jobs:
         role-to-assume: arn:aws:iam::305870070165:role/GithubActionsRole
         aws-region: eu-west-2
 
+    # Login to Public ECR
+    - name: Login to Amazon ECR Public
+      run: |
+        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/c2n6x7m0
+
+    # Build and push Identity Lambda
+    - name: Build Identity Lambda Docker image
+      run: |
+        cd src/identity
+        docker build -t public.ecr.aws/c2n6x7m0/email-services:identity-${{ github.sha }} .
+        docker tag public.ecr.aws/c2n6x7m0/email-services:identity-${{ github.sha }} public.ecr.aws/c2n6x7m0/email-services:identity-latest
+
+    - name: Push Identity Lambda Docker image
+      run: |
+        docker push public.ecr.aws/c2n6x7m0/email-services:identity-${{ github.sha }}
+        docker push public.ecr.aws/c2n6x7m0/email-services:identity-latest
+
+    # # Build and push Email Lambda
+    # - name: Build Email Lambda Docker image
+    #   run: |
+    #     cd src/email
+    #     docker build -t public.ecr.aws/c2n6x7m0/email-services:email-${{ github.sha }} .
+    #     docker tag public.ecr.aws/c2n6x7m0/email-services:email-${{ github.sha }} public.ecr.aws/c2n6x7m0/email-services:email-latest
+
+    # - name: Push Email Lambda Docker image
+    #   run: |
+    #     docker push public.ecr.aws/c2n6x7m0/email-services:email-${{ github.sha }}
+    #     docker push public.ecr.aws/c2n6x7m0/email-services:email-latest
+
+    # Terraform deployment
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
@@ -37,9 +67,17 @@ jobs:
       working-directory: ./infra
 
     - name: Terraform Plan
+      env:
+        TF_VAR_identity_image_tag: identity-${{ github.sha }}
+        TF_VAR_email_image_tag: email-${{ github.sha }}
+        TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
       run: terraform plan
       working-directory: ./infra
 
     - name: Terraform Apply
+      env:
+        TF_VAR_identity_image_tag: identity-${{ github.sha }}
+        TF_VAR_email_image_tag: email-${{ github.sha }}
+        TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
       run: terraform apply -auto-approve
       working-directory: ./infra
