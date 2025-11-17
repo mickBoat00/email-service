@@ -34,3 +34,8 @@ variable "identity_image_tag" {
 variable "email_image_tag" {
   type = string
 }
+
+variable "ecr_registry" {
+  type = string
+  default = "public.ecr.aws/c2n6x7m0"
+}

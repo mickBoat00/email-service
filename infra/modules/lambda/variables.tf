@@ -35,6 +35,6 @@ variable "environment_variables" {
   default = {}
 }
 
-variable "image_uri" {
+variable "ecr_registry" {
   type = string
 }

@@ -21,10 +21,10 @@ resource "aws_iam_role_policy" "lambda_policy" {
   })
 }
 
-data "aws_ecr_image" "lambda_image" {
-  repository_name = var.ecr_repository_name
-  image_tag       = var.image_tag
-}
+# data "aws_ecr_image" "lambda_image" {
+#   repository_name = var.ecr_repository_name
+#   image_tag       = var.image_tag
+# }
 
 resource "aws_lambda_function" "lambda_function" {
   function_name = var.lambda_name
@@ -32,7 +32,7 @@ resource "aws_lambda_function" "lambda_function" {
 
   package_type = "Image"
 
-  image_uri = var.image_uri
+   image_uri    = "${var.ecr_registry}/${var.ecr_repository_name}:${var.image_tag}"
   
   memory_size = var.memory_size
   timeout     = var.timeout
