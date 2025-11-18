@@ -23,6 +23,32 @@ module "image_processor_lambda" {
   ]
 }
 
+
+module "email_lambda" {
+  source = "./modules/lambda"
+
+  lambda_name          = "email-func"
+  region               = var.region
+  ecr_repository_name = "main"
+  image_tag           = "email"
+
+  environment_variables = {
+    MONGODB_URI = var.mongodb_uri
+  }
+
+  policy_statements = [
+    {
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      Resource = "*"
+    }
+  ]
+}
+
 module "api_gateway" {
   source = "./modules/apigateway"
 

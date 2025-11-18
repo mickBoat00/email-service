@@ -53,7 +53,7 @@ def lambda_handler(event, context):
             "createdAt": datetime.utcnow()
         }
         
-        result = collection.insert_one(document)
+        collection.insert_one(document)
         
         response_body = {
             "appName": document["appName"],
