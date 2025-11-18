@@ -8,6 +8,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      ECR_REPO: main
+      AWS_ACCOUNT_ID: 305870070165
+
     permissions:
       id-token: write
       contents: read
@@ -22,29 +26,17 @@ jobs:
         role-to-assume: arn:aws:iam::305870070165:role/GithubActionsRole
         aws-region: eu-west-2
 
-    # Login to Public ECR
-    - name: Login to Amazon ECR Public
+    # Login to Private ECR - 
+    - name: Login to Amazon ECR
       run: |
-        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/c2n6x7m0
+        aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com
 
     # Build and push Identity Lambda
     - name: Build and Push Identity Lambda
       run: |
         cd src/identity
-        docker build -t public.ecr.aws/c2n6x7m0/email-services:identity-latest .
-        docker push public.ecr.aws/c2n6x7m0/email-services:identity-latest
-
-    # # Build and push Email Lambda
-    # - name: Build Email Lambda Docker image
-    #   run: |
-    #     cd src/email
-    #     docker build -t public.ecr.aws/c2n6x7m0/email-services:email-${{ github.sha }} .
-    #     docker tag public.ecr.aws/c2n6x7m0/email-services:email-${{ github.sha }} public.ecr.aws/c2n6x7m0/email-services:email-latest
-
-    # - name: Push Email Lambda Docker image
-    #   run: |
-    #     docker push public.ecr.aws/c2n6x7m0/email-services:email-${{ github.sha }}
-    #     docker push public.ecr.aws/c2n6x7m0/email-services:email-latest
+        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:identity .
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:identity
 
     # Terraform deployment
     - name: Setup Terraform
@@ -63,16 +55,12 @@ jobs:
 
     - name: Terraform Plan
       env:
-        TF_VAR_identity_image_tag: identity-latest
-        TF_VAR_email_image_tag: email-latest
         TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
       run: terraform plan
       working-directory: ./infra
 
     - name: Terraform Apply
       env:
-        TF_VAR_identity_image_tag: identity-latest
-        TF_VAR_email_image_tag: email-latest
         TF_VAR_mongodb_uri: ${{ secrets.MONGODB_URI }}
       run: terraform apply -auto-approve
       working-directory: ./infra

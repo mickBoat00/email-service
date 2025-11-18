@@ -3,9 +3,8 @@ module "image_processor_lambda" {
 
   lambda_name          = "test-func"
   region               = var.region
-  ecr_repository_name = "email-services"
-  image_tag           = "identity-latest"
-  ecr_registry        = "public.ecr.aws/c2n6x7m0"
+  ecr_repository_name = "main"
+  image_tag           = "identity"
 
   environment_variables = {
     MONGODB_URI = var.mongodb_uri

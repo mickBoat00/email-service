@@ -18,6 +18,7 @@ variable "timeout" {
 
 variable "ecr_repository_name" {
   type = string
+  default = "main"
 }
 
 variable "image_tag" {
@@ -35,6 +36,6 @@ variable "environment_variables" {
   default = {}
 }
 
-variable "ecr_registry" {
-  type = string
+variable "account_id" {
+  default = 305870070165
 }
