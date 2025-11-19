@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import datetime
+from apikeyendpoints import get_api_keys, delete_api_key, create_api_key,
 from pymongo import MongoClient
 
 client = MongoClient(host=os.environ["MONGODB_URI"])
@@ -66,14 +67,16 @@ def handle_apikey(event):
     """Placeholder for CRUD operations for API keys."""
     method = event["httpMethod"].upper()
 
-    if method == "POST":
-        return response(200, {"message": "API key creation endpoint placeholder"})
-    elif method == "GET":
-        return response(200, {"message": "API key list endpoint placeholder"})
+    if method == "GET":
+        return get_api_keys(event, collection)
+    elif method == "POST":
+        return create_api_key(event, collection)
     elif method == "DELETE":
-        return response(200, {"message": "API key deletion endpoint placeholder"})
+        return delete_api_key(event, collection)
     else:
-        return response(405, {"error": f"Unsupported method {method}"})
+        return response(405, {"error": "Method not allowed"})
+
+    
 
 def handle_get_apps():
     """Retrieve all registered apps."""
