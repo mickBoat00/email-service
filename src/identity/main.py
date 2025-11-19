@@ -78,7 +78,8 @@ def handle_apikey(event):
 def handle_get_apps():
     """Retrieve all registered apps."""
     apps = list(collection.find({}, {"_id": 1, "appName": 1}))
-    return response(200, {"apps": apps})
+    formatted = [{"id": str(app["_id"]), "appName": app["appName"]} for app in apps]
+    return response(200, {"apps": formatted})
 
 def lambda_handler(event, context):
     try:
