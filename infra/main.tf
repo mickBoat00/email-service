@@ -79,19 +79,40 @@ module "api_gateway" {
 
   routes = [
     {
-      path_part      = "identity"
+      path_part      = "register"
       http_method    = "POST"
       lambda_arn     = module.identity_lambda.lambda_arn
       lambda_name    = module.identity_lambda.lambda_name
       enable_api_key = false
     },
     {
-      path_part      = "send"
+      path_part      = "apps"
+      http_method    = "GET"
+      lambda_arn     = module.identity_lambda.lambda_arn
+      lambda_name    = module.identity_lambda.lambda_name
+      enable_api_key = false
+    },
+    {
+      path_part      = "apikey"
       http_method    = "POST"
-      lambda_arn     = module.email_lambda.lambda_arn
-      lambda_name    = module.email_lambda.lambda_name
-      enable_api_key = true
-    }
+      lambda_arn     = module.identity_lambda.lambda_arn
+      lambda_name    = module.identity_lambda.lambda_name
+      enable_api_key = false
+    },
+    {
+      path_part      = "apikey"
+      http_method    = "GET"
+      lambda_arn     = module.identity_lambda.lambda_arn
+      lambda_name    = module.identity_lambda.lambda_name
+      enable_api_key = false
+    },
+    {
+      path_part      = "apikey"
+      http_method    = "DELETE"
+      lambda_arn     = module.identity_lambda.lambda_arn
+      lambda_name    = module.identity_lambda.lambda_name
+      enable_api_key = false
+    },
   ]
 
   usage_plan_config = {
