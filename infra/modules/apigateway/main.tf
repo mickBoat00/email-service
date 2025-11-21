@@ -41,21 +41,29 @@ resource "aws_api_gateway_integration" "routes" {
 }
 
 locals {
-  unique_lambdas = distinct([for r in var.routes : {
-    name = r.lambda_name
-    arn  = r.lambda_arn
-  }])
+  unique_lambdas = distinct([
+    for r in var.routes : r.lambda_name
+  ])
+  
+  lambda_map = {
+    for r in var.routes : r.lambda_name => r.lambda_arn...
+  }
+  
+  # Get the first ARN for each unique lambda name
+  lambda_permissions = {
+    for name in local.unique_lambdas : name => [
+      for r in var.routes : r.lambda_arn if r.lambda_name == name
+    ][0]
+  }
 }
 
 # One permission per unique Lambda function
 resource "aws_lambda_permission" "api_invoke" {
-  for_each = {
-    for l in local.unique_lambdas : l.name => l
-  }
+  for_each = local.lambda_permissions
 
   statement_id  = "AllowAPIGatewayInvoke-${each.key}"
   action        = "lambda:InvokeFunction"
-  function_name = each.value.arn
+  function_name = each.value
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
 }

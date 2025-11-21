@@ -1,17 +1,17 @@
 data "aws_caller_identity" "current" {}
 
-module "identity_lambda" {
+module "apps_lambda" {
   source = "./modules/lambda"
 
-  lambda_name         = "identity-func"
+  lambda_name         = "apps-func"
   region              = var.region
   account_id          = data.aws_caller_identity.current.account_id
   ecr_repository_name = "main"
-  image_tag           = "identity"
+  image_tag           = "apps"
 
   environment_variables = {
     MONGODB_URI   = var.mongodb_uri
-    # USAGE_PLAN_ID = module.api_gateway.usage_plan_id
+    USAGE_PLAN_ID = module.api_gateway.usage_plan_id
   }
 
   policy_statements = [
@@ -35,39 +35,39 @@ module "identity_lambda" {
   ]
 }
 
-module "email_lambda" {
-  source = "./modules/lambda"
+# module "email_lambda" {
+#   source = "./modules/lambda"
 
-  lambda_name         = "email-func"
-  region              = var.region
-  account_id          = data.aws_caller_identity.current.account_id
-  ecr_repository_name = "main"
-  image_tag           = "email"
+#   lambda_name         = "email-func"
+#   region              = var.region
+#   account_id          = data.aws_caller_identity.current.account_id
+#   ecr_repository_name = "main"
+#   image_tag           = "email"
 
-  environment_variables = {
-    MONGODB_URI = var.mongodb_uri
-  }
+#   environment_variables = {
+#     MONGODB_URI = var.mongodb_uri
+#   }
 
-  policy_statements = [
-    {
-      Effect = "Allow"
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ]
-      Resource = "*"
-    },
-    {
-      Effect = "Allow"
-      Action = [
-        "ses:SendEmail",
-        "ses:SendRawEmail"
-      ]
-      Resource = "*"
-    }
-  ]
-}
+#   policy_statements = [
+#     {
+#       Effect = "Allow"
+#       Action = [
+#         "logs:CreateLogGroup",
+#         "logs:CreateLogStream",
+#         "logs:PutLogEvents"
+#       ]
+#       Resource = "*"
+#     },
+#     {
+#       Effect = "Allow"
+#       Action = [
+#         "ses:SendEmail",
+#         "ses:SendRawEmail"
+#       ]
+#       Resource = "*"
+#     }
+#   ]
+# }
 
 
 module "api_gateway" {
@@ -79,38 +79,24 @@ module "api_gateway" {
 
   routes = [
     {
-      path_part      = "register"
-      http_method    = "POST"
-      lambda_arn     = module.identity_lambda.lambda_arn
-      lambda_name    = module.identity_lambda.lambda_name
+      path_part      = "apps"
+      http_method    = "GET"
+      lambda_arn     = module.apps_lambda.lambda_arn
+      lambda_name    = module.apps_lambda.lambda_name
       enable_api_key = false
     },
     {
       path_part      = "apps"
-      http_method    = "GET"
-      lambda_arn     = module.identity_lambda.lambda_arn
-      lambda_name    = module.identity_lambda.lambda_name
-      enable_api_key = false
-    },
-    {
-      path_part      = "apikey"
       http_method    = "POST"
-      lambda_arn     = module.identity_lambda.lambda_arn
-      lambda_name    = module.identity_lambda.lambda_name
+      lambda_arn     = module.apps_lambda.lambda_arn
+      lambda_name    = module.apps_lambda.lambda_name
       enable_api_key = false
     },
     {
-      path_part      = "apikey"
-      http_method    = "GET"
-      lambda_arn     = module.identity_lambda.lambda_arn
-      lambda_name    = module.identity_lambda.lambda_name
-      enable_api_key = false
-    },
-    {
-      path_part      = "apikey"
+      path_part      = "apps"
       http_method    = "DELETE"
-      lambda_arn     = module.identity_lambda.lambda_arn
-      lambda_name    = module.identity_lambda.lambda_name
+      lambda_arn     = module.apps_lambda.lambda_arn
+      lambda_name    = module.apps_lambda.lambda_name
       enable_api_key = false
     },
   ]

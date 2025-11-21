@@ -27,23 +27,23 @@ jobs:
         aws-region: eu-west-2
 
     # Login to Private ECR - 
-    - name: Login to Amazon ECR
-      run: |
-        aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com
+    # - name: Login to Amazon ECR
+    #   run: |
+    #     aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com
 
-    # Build and push Identity Lambda
-    - name: Build and Push Identity Lambda
-      run: |
-        cd src/identity
-        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:identity .
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:identity
+    # # Build and push apps Lambda
+    # - name: Build and Push apps Lambda
+    #   run: |
+    #     cd src/apps
+    #     docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:apps .
+    #     docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:apps
 
-    # Build and push Email Lambda 
-    - name: Build and Push Email Lambda
-      run: |
-        cd src/email
-        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email .
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email
+    # # Build and push Email Lambda 
+    # - name: Build and Push Email Lambda
+    #   run: |
+    #     cd src/email
+    #     docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email .
+    #     docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email
 
     # Terraform deployment
     - name: Setup Terraform
