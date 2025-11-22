@@ -1,63 +1,96 @@
-# API Gateway REST API
+##############################
+# REST API
+##############################
+
 resource "aws_api_gateway_rest_api" "this" {
   name        = var.api_name
   description = "API Gateway for ${var.api_name}"
-  
+
   endpoint_configuration {
     types = ["REGIONAL"]
   }
 }
 
-# Create resources for each route
+##############################
+# BUILD METHOD MAP
+##############################
+
+locals {
+  # Expand each route into individual method objects
+  route_methods = flatten([
+    for r in var.routes : [
+      for m in r.http_methods : {
+        path_part      = r.path_part
+        method         = m
+        lambda_arn     = r.lambda_arn
+        lambda_name    = r.lambda_name
+        enable_api_key = r.enable_api_key
+      }
+    ]
+  ])
+
+  # Map for_each → "apps-GET" = { method="GET", ... }
+  route_methods_map = {
+    for rm in local.route_methods :
+    "${rm.path_part}-${rm.method}" => rm
+  }
+
+  # Unique Lambdas → permission for each one
+  lambda_permissions = {
+    for r in var.routes : r.lambda_name => r.lambda_arn
+  }
+}
+
+##############################
+# RESOURCES
+##############################
+
 resource "aws_api_gateway_resource" "routes" {
-  count = length(var.routes)
+  for_each = { for r in var.routes : r.path_part => r }
 
   rest_api_id = aws_api_gateway_rest_api.this.id
   parent_id   = aws_api_gateway_rest_api.this.root_resource_id
-  path_part   = var.routes[count.index].path_part
+  path_part   = each.key
 }
 
-# Create methods for each route
-resource "aws_api_gateway_method" "routes" {
-  count = length(var.routes)
+##############################
+# METHODS
+##############################
 
-  rest_api_id      = aws_api_gateway_rest_api.this.id
-  resource_id      = aws_api_gateway_resource.routes[count.index].id
-  http_method      = var.routes[count.index].http_method
-  authorization    = "NONE"
-  api_key_required = var.routes[count.index].enable_api_key
+resource "aws_api_gateway_method" "methods" {
+  for_each = local.route_methods_map
+
+  rest_api_id   = aws_api_gateway_rest_api.this.id
+  resource_id   = aws_api_gateway_resource.routes[each.value.path_part].id
+  http_method   = each.value.method
+  authorization = "NONE"
 }
 
-# Create integrations for each route
-resource "aws_api_gateway_integration" "routes" {
-  count = length(var.routes)
+##############################
+# INTEGRATIONS
+##############################
 
-  rest_api_id             = aws_api_gateway_rest_api.this.id
-  resource_id             = aws_api_gateway_resource.routes[count.index].id
-  http_method             = aws_api_gateway_method.routes[count.index].http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.routes[count.index].lambda_arn}/invocations"
-}
+resource "aws_api_gateway_integration" "integrations" {
+  for_each = local.route_methods_map
 
-locals {
-  unique_lambdas = distinct([
-    for r in var.routes : r.lambda_name
-  ])
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.routes[each.value.path_part].id
+  http_method = each.value.method  # <-- Use this instead
+  type        = "AWS_PROXY"
+
+  integration_http_method = "POST"  # <-- Also add this!
+
+  uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${each.value.lambda_arn}/invocations"
   
-  lambda_map = {
-    for r in var.routes : r.lambda_name => r.lambda_arn...
-  }
-  
-  # Get the first ARN for each unique lambda name
-  lambda_permissions = {
-    for name in local.unique_lambdas : name => [
-      for r in var.routes : r.lambda_arn if r.lambda_name == name
-    ][0]
-  }
+  depends_on = [
+    aws_api_gateway_method.methods
+  ]
 }
 
-# One permission per unique Lambda function
+##############################
+# LAMBDA PERMISSIONS
+##############################
+
 resource "aws_lambda_permission" "api_invoke" {
   for_each = local.lambda_permissions
 
@@ -68,15 +101,18 @@ resource "aws_lambda_permission" "api_invoke" {
   source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
 }
 
-# API Gateway Deployment
+##############################
+# DEPLOYMENT
+##############################
+
 resource "aws_api_gateway_deployment" "this" {
   rest_api_id = aws_api_gateway_rest_api.this.id
 
+  # Redeploy when methods or integrations change
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.routes,
-      aws_api_gateway_method.routes,
-      aws_api_gateway_integration.routes,
+      aws_api_gateway_method.methods,
+      aws_api_gateway_integration.integrations
     ]))
   }
 
@@ -85,18 +121,24 @@ resource "aws_api_gateway_deployment" "this" {
   }
 
   depends_on = [
-    aws_api_gateway_integration.routes
+    aws_api_gateway_integration.integrations
   ]
 }
 
-# API Gateway Stage
+##############################
+# STAGE
+##############################
+
 resource "aws_api_gateway_stage" "this" {
   deployment_id = aws_api_gateway_deployment.this.id
   rest_api_id   = aws_api_gateway_rest_api.this.id
   stage_name    = var.stage_name
 }
 
-# Usage Plan (for rate limiting)
+##############################
+# USAGE PLAN
+##############################
+
 resource "aws_api_gateway_usage_plan" "main" {
   name        = var.usage_plan_config.name
   description = "Usage plan for ${var.api_name}"

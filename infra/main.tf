@@ -77,29 +77,14 @@ module "api_gateway" {
   region     = var.region
   stage_name = "dev"
 
-  routes = [
-    {
-      path_part      = "apps"
-      http_method    = "GET"
-      lambda_arn     = module.apps_lambda.lambda_arn
-      lambda_name    = module.apps_lambda.lambda_name
-      enable_api_key = false
-    },
-    {
-      path_part      = "apps"
-      http_method    = "POST"
-      lambda_arn     = module.apps_lambda.lambda_arn
-      lambda_name    = module.apps_lambda.lambda_name
-      enable_api_key = false
-    },
-    {
-      path_part      = "apps"
-      http_method    = "DELETE"
-      lambda_arn     = module.apps_lambda.lambda_arn
-      lambda_name    = module.apps_lambda.lambda_name
-      enable_api_key = false
-    },
-  ]
+
+  routes = [{
+    path_part      = "apps"
+    http_methods   = ["GET", "POST", "DELETE" ]
+    lambda_arn     = module.apps_lambda.lambda_arn
+    lambda_name    = module.apps_lambda.lambda_name
+    enable_api_key = false
+  }]
 
   usage_plan_config = {
     name         = "email-service-plan"

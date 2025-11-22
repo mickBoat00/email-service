@@ -17,12 +17,12 @@ variable "stage_name" {
 variable "routes" {
   type = list(object({
     path_part      = string
-    http_method    = string
+    http_methods   = list(string)  # Changed from http_method to http_methods (list)
     lambda_arn     = string
     lambda_name    = string
     enable_api_key = bool
   }))
-  description = "List of routes to create"
+  description = "List of routes to create. Each route can have multiple HTTP methods."
 }
 
 variable "usage_plan_config" {
@@ -42,4 +42,3 @@ variable "usage_plan_config" {
     quota_period = "DAY"
   }
 }
-
