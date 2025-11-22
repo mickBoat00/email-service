@@ -9,10 +9,10 @@ module "apps_lambda" {
   ecr_repository_name = "main"
   image_tag           = "apps"
 
-  environment_variables = {
-    MONGODB_URI   = var.mongodb_uri
-    USAGE_PLAN_ID = module.api_gateway.usage_plan_id
-  }
+  # environment_variables = {
+  #   MONGODB_URI   = var.mongodb_uri
+  #   USAGE_PLAN_ID = module.api_gateway.usage_plan_id
+  # }
 
   policy_statements = [
     {
@@ -107,6 +107,27 @@ module "api_gateway" {
     rate_limit   = 50
     quota_limit  = 10000
     quota_period = "DAY"
+  }
+}
+
+
+resource "null_resource" "update_lambda_usage_plan" {
+  depends_on = [
+    module.api_gateway,
+    module.apps_lambda
+  ]
+
+  triggers = {
+    usage_plan_id = module.api_gateway.usage_plan_id
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+aws lambda update-function-configuration \
+  --function-name ${module.apps_lambda.lambda_name} \
+  --environment "Variables={MONGODB_URI=${var.mongodb_uri},USAGE_PLAN_ID=${module.api_gateway.usage_plan_id}}" \
+  --region ${var.region}
+EOF
   }
 }
 
