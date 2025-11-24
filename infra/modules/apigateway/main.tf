@@ -36,9 +36,15 @@ locals {
   }
 
   # Unique Lambdas → permission for each one
-  lambda_permissions = {
-    for r in var.routes : r.lambda_name => r.lambda_arn
+  unique_lambdas = {
+    for r in var.routes : r.lambda_name => r.lambda_arn...
   }
+  
+  # Flatten the grouped values (take first ARN for each unique lambda)
+  lambda_permissions = {
+    for name, arns in local.unique_lambdas : name => arns[0]
+  }
+
 }
 
 ##############################

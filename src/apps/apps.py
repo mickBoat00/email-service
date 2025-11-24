@@ -119,7 +119,10 @@ def handle_delete_app(event, collection, response):
         if not app:
             return response(404, {"error": "App not found"})
         
+        ses.delete_identity(Identity=app.get('senderEmail'))
+        
         collection.delete_one({"_id": ObjectId(app_id)})
+
         
         return response(200, {
             "message": "App deleted successfully",

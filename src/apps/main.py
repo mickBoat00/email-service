@@ -2,6 +2,7 @@ import os
 import json
 from pymongo import MongoClient
 from apps import handle_get_apps, handle_post_apps, handle_delete_app
+from apikeys import handle_post_apikey
 
 client = MongoClient(host=os.environ["MONGODB_URI"])
 db = client.get_database()
@@ -18,7 +19,7 @@ def response(status_code, body):
     }
 
 def handle_apps(event):
-    """Handle CRUD operations for Apps keys."""
+    """Handle CRUD operations for Apps."""
     method = event["httpMethod"].upper()
 
     if method == "GET":
@@ -30,12 +31,24 @@ def handle_apps(event):
     else:
         return response(405, {"error": "Method not allowed"})
 
+
+def handle_apikeys(event):
+    """Handle CRUD operations for API Keys."""
+    method = event["httpMethod"].upper()
+
+    if method == "POST":
+        return handle_post_apikey(event, collection, response)
+    else:
+        return response(405, {"error": "Method not allowed"})
+
 def lambda_handler(event, context):
     try:
         path = event.get("path", "")
 
         if path.startswith("/apps"):
             return handle_apps(event)
+        elif path.startswith("/apikeys"):
+            return handle_apikeys(event)
         else:
             return response(404, {"error": "Route not found"})
 

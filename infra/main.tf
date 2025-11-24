@@ -35,7 +35,8 @@ module "apps_lambda" {
     {
       Effect = "Allow"
       Action = [
-        "ses:VerifyEmailIdentity"
+        "ses:VerifyEmailIdentity",
+        "ses:GetIdentityVerificationAttributes"
       ]
       Resource = "*"
     }
@@ -91,7 +92,16 @@ module "api_gateway" {
     lambda_arn     = module.apps_lambda.lambda_arn
     lambda_name    = module.apps_lambda.lambda_name
     enable_api_key = false
-  }]
+  },
+  {
+    path_part      = "apikeys"
+    http_methods   = ["POST"]
+    lambda_arn     = module.apps_lambda.lambda_arn
+    lambda_name    = module.apps_lambda.lambda_name
+    enable_api_key = false
+  }
+  
+  ]
 
   usage_plan_config = {
     name         = "email-service-plan"
@@ -111,6 +121,7 @@ resource "null_resource" "update_lambda_usage_plan" {
 
   triggers = {
     usage_plan_id = module.api_gateway.usage_plan_id
+    always_run     = timestamp()
   }
 
   provisioner "local-exec" {
