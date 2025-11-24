@@ -2,6 +2,9 @@
 import json
 from datetime import datetime
 from bson import ObjectId
+import boto3    
+
+ses = boto3.client('ses')
 
 
 def handle_get_apps(collection, response):
@@ -70,6 +73,10 @@ def handle_post_apps(event, collection, response):
             "error": "Email already registered",
             "message": f"{sender_email} is already linked to an existing app."
         })
+
+
+    response_verify = ses.verify_email_identity(EmailAddress=sender_email)
+    print(f"SES verify email response: {response_verify}")
     
     # Create registration record
     document = {

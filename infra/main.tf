@@ -9,10 +9,10 @@ module "apps_lambda" {
   ecr_repository_name = "main"
   image_tag           = "apps"
 
-  # environment_variables = {
-  #   MONGODB_URI   = var.mongodb_uri
-  #   USAGE_PLAN_ID = module.api_gateway.usage_plan_id
-  # }
+  environment_variables = {
+    MONGODB_URI   = var.mongodb_uri
+    # USAGE_PLAN_ID = module.api_gateway.usage_plan_id
+  }
 
   policy_statements = [
     {
