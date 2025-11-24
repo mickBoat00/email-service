@@ -31,6 +31,13 @@ module "apps_lambda" {
         "apigateway:GET"
       ]
       Resource = "*"
+    },
+    {
+      Effect = "Allow"
+      Action = [
+        "ses:VerifyEmailIdentity"
+      ]
+      Resource = "*"
     }
   ]
 }
