@@ -43,39 +43,39 @@ module "apps_lambda" {
   ]
 }
 
-# module "email_lambda" {
-#   source = "./modules/lambda"
+module "email_lambda" {
+  source = "./modules/lambda"
 
-#   lambda_name         = "email-func"
-#   region              = var.region
-#   account_id          = data.aws_caller_identity.current.account_id
-#   ecr_repository_name = "main"
-#   image_tag           = "email"
+  lambda_name         = "email-func"
+  region              = var.region
+  account_id          = data.aws_caller_identity.current.account_id
+  ecr_repository_name = "main"
+  image_tag           = "email"
 
-#   environment_variables = {
-#     MONGODB_URI = var.mongodb_uri
-#   }
+  environment_variables = {
+    MONGODB_URI = var.mongodb_uri
+  }
 
-#   policy_statements = [
-#     {
-#       Effect = "Allow"
-#       Action = [
-#         "logs:CreateLogGroup",
-#         "logs:CreateLogStream",
-#         "logs:PutLogEvents"
-#       ]
-#       Resource = "*"
-#     },
-#     {
-#       Effect = "Allow"
-#       Action = [
-#         "ses:SendEmail",
-#         "ses:SendRawEmail"
-#       ]
-#       Resource = "*"
-#     }
-#   ]
-# }
+  policy_statements = [
+    {
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      Resource = "*"
+    },
+    {
+      Effect = "Allow"
+      Action = [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+      ]
+      Resource = "*"
+    }
+  ]
+}
 
 
 module "api_gateway" {
@@ -99,15 +99,22 @@ module "api_gateway" {
     lambda_arn     = module.apps_lambda.lambda_arn
     lambda_name    = module.apps_lambda.lambda_name
     enable_api_key = false
+  },
+  {
+    path_part      = "email"
+    http_methods   = ["POST"]
+    lambda_arn     = module.email_lambda.lambda_arn
+    lambda_name    = module.email_lambda.lambda_name
+    enable_api_key = true
   }
   
   ]
 
   usage_plan_config = {
     name         = "email-service-plan"
-    burst_limit  = 100
-    rate_limit   = 50
-    quota_limit  = 10000
+    burst_limit  = 3
+    rate_limit   = 1
+    quota_limit  = 1
     quota_period = "DAY"
   }
 }

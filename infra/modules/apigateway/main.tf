@@ -9,6 +9,8 @@ resource "aws_api_gateway_rest_api" "this" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+
+  api_key_source = "HEADER"
 }
 
 ##############################
@@ -70,6 +72,7 @@ resource "aws_api_gateway_method" "methods" {
   resource_id   = aws_api_gateway_resource.routes[each.value.path_part].id
   http_method   = each.value.method
   authorization = "NONE"
+  api_key_required = each.value.enable_api_key
 }
 
 ##############################
@@ -81,10 +84,10 @@ resource "aws_api_gateway_integration" "integrations" {
 
   rest_api_id = aws_api_gateway_rest_api.this.id
   resource_id = aws_api_gateway_resource.routes[each.value.path_part].id
-  http_method = each.value.method  # <-- Use this instead
+  http_method = aws_api_gateway_method.methods[each.key].http_method 
   type        = "AWS_PROXY"
 
-  integration_http_method = "POST"  # <-- Also add this!
+  integration_http_method = "POST"
 
   uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${each.value.lambda_arn}/invocations"
   

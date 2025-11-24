@@ -38,12 +38,12 @@ jobs:
         docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:apps .
         docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:apps
 
-    # # Build and push Email Lambda 
-    # - name: Build and Push Email Lambda
-    #   run: |
-    #     cd src/email
-    #     docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email .
-    #     docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email
+    # Build and push Email Lambda 
+    - name: Build and Push Email Lambda
+      run: |
+        cd src/email
+        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email .
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:email
 
     # Terraform deployment
     - name: Setup Terraform

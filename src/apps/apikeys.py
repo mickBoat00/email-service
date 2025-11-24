@@ -40,7 +40,6 @@ def handle_post_apikey(event, collection, response):
         body = json.loads(event.get("body", "{}")) if event.get("body") else {}
 
         app_id = body.get("id")
-        app_name = body.get("appName")
 
         if not app_id:
             return response(400, {
@@ -54,6 +53,8 @@ def handle_post_apikey(event, collection, response):
 
         if not app:
             return response(404, {"error": "App not found"})
+
+        app_name = app.get("appName")
 
         sender_email = app.get("senderEmail")
 
