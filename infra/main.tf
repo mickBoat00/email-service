@@ -112,9 +112,9 @@ module "api_gateway" {
 
   usage_plan_config = {
     name         = "email-service-plan"
-    burst_limit  = 3
-    rate_limit   = 1
-    quota_limit  = 1
+    burst_limit  = 5
+    rate_limit   = 3
+    quota_limit  = 3
     quota_period = "DAY"
   }
 }
