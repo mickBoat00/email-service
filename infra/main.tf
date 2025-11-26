@@ -28,7 +28,8 @@ module "apps_lambda" {
       Effect = "Allow"
       Action = [
         "apigateway:POST",
-        "apigateway:GET"
+        "apigateway:GET",
+        "apigateway:DELETE",
       ]
       Resource = "*"
     },
@@ -36,7 +37,8 @@ module "apps_lambda" {
       Effect = "Allow"
       Action = [
         "ses:VerifyEmailIdentity",
-        "ses:GetIdentityVerificationAttributes"
+        "ses:GetIdentityVerificationAttributes",
+        "ses:DeleteIdentity"
       ]
       Resource = "*"
     }
@@ -95,7 +97,7 @@ module "api_gateway" {
   },
   {
     path_part      = "apikeys"
-    http_methods   = ["POST"]
+    http_methods   = ["POST", "DELETE"]
     lambda_arn     = module.apps_lambda.lambda_arn
     lambda_name    = module.apps_lambda.lambda_name
     enable_api_key = false

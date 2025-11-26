@@ -2,7 +2,7 @@ import os
 import json
 from pymongo import MongoClient
 from apps import handle_get_apps, handle_post_apps, handle_delete_app
-from apikeys import handle_post_apikey
+from apikeys import handle_post_apikey, handle_delete_apikey
 
 client = MongoClient(host=os.environ["MONGODB_URI"])
 db = client.get_database()
@@ -38,6 +38,8 @@ def handle_apikeys(event):
 
     if method == "POST":
         return handle_post_apikey(event, collection, response)
+    elif method == "DELETE":
+        return handle_delete_apikey(event, collection, response)
     else:
         return response(405, {"error": "Method not allowed"})
 

@@ -130,3 +130,69 @@ def handle_post_apikey(event, collection, response):
             "error": "Failed to create API key",
             "details": str(e)
         })
+
+def handle_delete_apikey(event, collection, response):
+    try:
+        body = json.loads(event.get("body", "{}")) if event.get("body") else {}
+
+        app_id = body.get("id")
+
+        if not app_id:
+            return response(400, {
+                "error": "Missing required fields: id"
+            })
+
+        try:
+            app = collection.find_one({"_id": ObjectId(app_id)})
+        except Exception:
+            return response(400, {"error": "Invalid app ID format"})
+
+        if not app:
+            return response(404, {"error": "App not found"})
+
+        api_gateway_key_id = app.get("apiGatewayKeyId")
+
+        if not api_gateway_key_id:
+            return response(404, {
+                "error": "No API key found",
+                "message": "This app does not have an API key to delete"
+            })
+
+        try:
+            apigateway.delete_api_key(apiKey=api_gateway_key_id)
+        except apigateway.exceptions.NotFoundException:
+            pass
+        except Exception as e:
+            print(f"Error deleting API key from API Gateway: {str(e)}")
+            return response(500, {
+                "error": "Failed to delete API key from API Gateway",
+                "details": str(e)
+            })
+
+        collection.update_one(
+            {"_id": ObjectId(app_id)},
+            {
+                "$unset": {
+                    "apiGatewayKeyId": "",
+                    "apiKeyHash": "",
+                    "apiKeyCreatedAt": ""
+                },
+                "$set": {
+                    "status": "inactive",
+                    "updatedAt": datetime.utcnow()
+                }
+            }
+        )
+
+        return response(200, {
+            "message": "API key deleted successfully",
+            "appName": app.get("appName"),
+            "status": "inactive"
+        })
+
+    except Exception as e:
+        print(f"Error deleting API key: {str(e)}")
+        return response(500, {
+            "error": "Failed to delete API key",
+            "details": str(e)
+        })

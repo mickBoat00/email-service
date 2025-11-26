@@ -44,7 +44,7 @@ def lambda_handler(event, context):
                 "body": json.dumps({"error": "Invalid API key"})
             }   
 
-        sender = app["email_sender"]
+        sender = app["senderEmail"]
 
         response = client.send_email(
             Destination={
